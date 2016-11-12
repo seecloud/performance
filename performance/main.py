@@ -15,8 +15,11 @@
 
 import flask
 
+from performance import config
+
 
 app = flask.Flask(__name__)
+app.config.update(config.get_config()["flask"])
 
 
 @app.errorhandler(404)

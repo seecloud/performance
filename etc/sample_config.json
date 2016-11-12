@@ -1,0 +1,22 @@
+{
+    "flask": {
+        "PORT": 5010,
+        "HOST": "0.0.0.0",
+        "DEBUG": false
+    },
+    "rally": {
+        "tasks": {
+            "cumul_smoke": {
+                "note": "Cumulative Smoke tests set",
+                "input_file": "tasks/cumul_smoke.json",
+                "tag": "smoke",
+                "template_args": {},
+                "plugin_paths": null
+            }
+        },
+        "log_file": "rally.log",
+        "log_dir": "/var/log/rally",
+        "log_verbose": false,
+        "plugin_paths": null
+    }
+}
