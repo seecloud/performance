@@ -8,7 +8,7 @@
         "tasks": {
             "cumul_smoke": {
                 "note": "Cumulative Smoke tests set",
-                "input_file": "tasks/cumul_smoke.json",
+                "input_file": "tasks/cumul_smoke.yaml",
                 "tag": "smoke",
                 "template_args": {},
                 "plugin_paths": null
