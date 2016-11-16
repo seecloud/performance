@@ -10,4 +10,4 @@ setup(name="performance",
       author_email="<name>@mirantis.com",
       packages=["performance"],
       package_dir={"performance": "performance"},
-      package_data={"performance": ["tasks/*.json"]})
+      package_data={"performance": ["tasks/*.json", "tasks/*.yaml"]})
