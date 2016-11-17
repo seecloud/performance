@@ -16,7 +16,7 @@
 import mock
 
 from performance import main
-from tests.unit import test  # noqa
+from tests.unit import test
 
 
 class MainTestCase(test.TestCase):

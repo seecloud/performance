@@ -1,4 +1,4 @@
 rally==0.7.0
 gunicorn==19.6.0
 Flask==0.11.1
--e git://github.com/seecloud/flask-helpers.git#egg=flask_helpers
+flask-helpers==0.1
