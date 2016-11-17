@@ -16,7 +16,7 @@
 import mock
 
 from performance import config
-from tests.unit import test  # noqa
+from tests.unit import test
 
 
 class ConfigTestCase(test.TestCase):

@@ -17,7 +17,7 @@ import json
 
 import testtools
 
-from performance import main  # noqa
+from performance import main
 
 
 class TestCase(testtools.TestCase):

@@ -14,7 +14,7 @@
 #    under the License.
 
 import flask
-from flask_helpers import routing  # noqa
+from flask_helpers import routing
 
 from performance import api
 from performance import config
