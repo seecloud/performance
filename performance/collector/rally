@@ -1,0 +1,1 @@
+* * * * * root flock -n -E 0  /root/rally_container/cron_job.sh -c  /root/rally_container/cron_job.sh
