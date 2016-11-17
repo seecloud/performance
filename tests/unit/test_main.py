@@ -36,3 +36,8 @@ class MainTestCase(test.TestCase):
         mock_app.config = {"HOST": "foo_host", "PORT": 42}
         main.main()
         mock_app.run.assert_called_once_with(host="foo_host", port=42)
+
+    def test_api_map(self):
+        code, resp = self.get("/")
+        self.assertEqual(200, code)
+        self.assertEqual([], resp)
