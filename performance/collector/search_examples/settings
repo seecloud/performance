@@ -1,0 +1,4 @@
+export ES_URL=http://172.18.196.234:9200
+export CURL=$(which curl)
+export INDEX_NAME='performance'
+export TYPE_NAME='key_metrics'

@@ -14,10 +14,13 @@
 #    under the License.
 
 import flask
+#from  main import app
 
 
-bp = flask.Blueprint("dummy", __name__)
+bp = flask.Blueprint("1", __name__)
 
 
 def get_blueprints():
-    return [["/dummy", bp]]
+    return [["/", bp]]
+
+
