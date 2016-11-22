@@ -67,7 +67,7 @@ def main():
 
 
 
-@app.route("/performance/<period>")
+@app.route("/api/v1/performance/<period>")
 def get_perf(period):
     request_body =  {
         "size": 0,
@@ -158,7 +158,7 @@ def get_perf(period):
 
 
 
-@app.route("/region/<region>/<period>")
+@app.route("/api/v1/region/<region>/<period>")
 def get_perf_for_region(region,  period):
     request_body =  {
         "size": 0,
