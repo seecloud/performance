@@ -1,17 +1,26 @@
 #!/bin/bash
 
 
-DOCKER='/usr/bin/docker'
-DOCKER_CONTAINER='95ea5b320918'
 
-TASK_LOG="/var/log/task.log"
-TASK_FILE="/home/rally/task.yaml"
+#RALLY_CONNECTION_STRING='es:///172.18.196.234:9200.myRegion1'
 
-CONNECTION_STRING='es:///172.18.196.234:9200.myRegion1'
+if [ "x${RALLY_CONNECTION_STRING}" == "x" ]
+then
+  # do nothing if connection string is not defined
+  echo "RALLY_CONNECTION_STRING is not defined"
+  exit 0
+fi
 
+# Create deployment if it does not exist
+rally deployment list | grep '*' || (
+  echo "Creating deployment:   rally deployment create --fromenv --name=rally"
+  env
+  rally deployment create --fromenv --name=rally
+)
 
-TASK_UUID=`${DOCKER} exec ${DOCKER_CONTAINER} \
-rally task start 2>&1 ${TASK_FILE} \
+# run task
+
+TASK_UUID=`rally task start 2>&1 ${TASK_FILE} \
 | tee -a ${TASK_LOG} \
 | grep 'rally task results '\
 | awk '{ print $4 }' \
@@ -19,8 +28,8 @@ rally task start 2>&1 ${TASK_FILE} \
 | uniq`; 
 
 
-${DOCKER} exec ${DOCKER_CONTAINER} \
-rally --plugin-paths=/home/rally/plugins  \
+rally --plugin-paths=/opt/perf/rally_plugins  \
 task export \
 --uuid ${TASK_UUID} \
---connection ${CONNECTION_STRING} 2>&1 >> ${TASK_LOG}
+--connection ${RALLY_CONNECTION_STRING}
+

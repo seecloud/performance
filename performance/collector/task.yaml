@@ -1,0 +1,143 @@
+{% set flavor = flavor or "m1.tiny" %}
+{% set image = image or "^TestVM$" %}
+{% set availability_zone = availability_zone or "nova" %}
+{% set start_cidr = start_cidr or "10.2.0.0/24" %}
+{% set ext_network = ext_network or "admin_floating_net" %}
+---
+
+  KeystoneBasic.create_and_delete_role:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+
+  NovaServers.boot_and_delete_server:
+    -
+      args:
+        flavor:
+            name: "{{flavor}}"
+        image:
+            name: "{{image}}"
+        auto_assign_nic: true
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network:
+          start_cidr: "{{start_cidr}}"
+
+  NovaSecGroup.create_and_delete_secgroups:
+    -
+      args:
+        security_group_count: 2
+        rules_per_security_group: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NovaKeypair.create_and_delete_keypair:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  CinderVolumes.create_and_attach_volume:
+    -
+      args:
+          size: 1
+          image:
+            name: "{{image}}"
+          flavor:
+            name: "{{flavor}}"
+          create_volume_params:
+            availability_zone: "{{availability_zone}}"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NeutronNetworks.create_and_delete_subnets:
+    -
+      args:
+        subnet_cidr_start: "{{start_cidr}}"
+        subnets_per_network: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NeutronNetworks.create_and_delete_ports:
+    -
+      args:
+        ports_per_network: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NeutronNetworks.create_and_delete_floating_ips:
+    -
+      args:
+        floating_network: "{{ext_network}}"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NeutronNetworks.create_and_delete_routers:
+    -
+      args:
+        subnet_cidr_start: "{{start_cidr}}"
+        subnets_per_network: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
