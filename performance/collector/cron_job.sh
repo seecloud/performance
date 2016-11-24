@@ -21,10 +21,11 @@ ${RALLY} deployment list | grep '*' || (
   
   if [ "x${OS_PROJECT_NAME}" == "x" ]
   then
-    
-    echo "OS_PROJECT_NAME is not defined"
-    exit 0
-  
+    if [ "x${OS_TENANT_NAME}" == "x"  ]
+    then 
+      echo "OS_PROJECT_NAME or  OS_TENANT_NAME is not defined"
+      exit 0
+    fi
   fi
   
   if [ "x${OS_USERNAME}" == "x" ]
@@ -58,7 +59,6 @@ ${RALLY} deployment list | grep '*' || (
 
 TASK_UUID=`${RALLY} \
 task start  ${TASK_FILE} 2>&1\
-| tee -a ${TASK_LOG} \
 | grep 'rally task results '\
 | awk '{ print $4 }' \
 | sort \
