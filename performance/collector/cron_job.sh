@@ -68,7 +68,7 @@ task start  ${TASK_FILE} | tee /dev/stderr \
 | sort \
 | uniq`;
 
-if [ "x${UUID}" = "x" ]
+if [ "x${UUID}" == "x" ]
 then
   echo UUID=${TASK_UUID}
   echo "looks like rally task run failed"
