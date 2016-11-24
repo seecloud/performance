@@ -17,6 +17,39 @@ fi
 ${RALLY} deployment list | grep '*' || (
   echo "Creating deployment:   rally deployment create --fromenv --name=rally"
   env
+  
+  if [ "x${OS_PROJECT_NAME}" == "x" ]
+  then
+    
+    echo "OS_PROJECT_NAME is not defined"
+    exit 0
+  
+  fi
+  
+  if [ "x${OS_USERNAME}" == "x" ]
+  then
+
+    echo "OS_USERNAME is not defined"
+    exit 0
+
+  fi
+  
+  if [ "x${OS_PASSWORD}" == "x" ]
+  then
+
+    echo "OS_PASSWORD is not defined"
+    exit 0
+  
+  fi
+  
+  if [ "x${OS_AUTH_URL}" == "x" ]
+  then
+  
+    echo  "OS_AUTH_URL is  not defined"
+    exit 0
+  
+  fi  
+  
   ${RALLY} deployment create --fromenv --name=rally
 )
 
