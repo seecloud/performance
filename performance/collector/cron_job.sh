@@ -5,6 +5,7 @@
 #RALLY_CONNECTION_STRING='es:///172.18.196.234:9200.myRegion1'
 RALLY='/usr/local/bin/rally'
 TASK_FILE='/opt/perf/cron_jobs/task.yaml'
+RALLY_DEPLOYMENT_NAME='rally'
 
 if [ "x${RALLY_CONNECTION_STRING}" == "x" ]
 then
@@ -15,7 +16,7 @@ fi
 
 # Create deployment if it does not exist
 ${RALLY} deployment list | grep '*' || (
-  echo "Creating deployment:   rally deployment create --fromenv --name=rally"
+  echo "Creating deployment:   rally deployment create --fromenv --name=${RALLY_DEPLOYMENT_NAME}"
   env
   
   if [ "x${OS_PROJECT_NAME}" == "x" ]
@@ -50,7 +51,7 @@ ${RALLY} deployment list | grep '*' || (
   
   fi  
   
-  ${RALLY} deployment create --fromenv --name=rally
+  ${RALLY} deployment create --fromenv --name=rally && ${RALLY} deployment  use ${RALLY_DEPLOYMENT_NAME}
 )
 
 # run task
