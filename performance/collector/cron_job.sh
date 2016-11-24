@@ -57,7 +57,7 @@ ${RALLY} deployment list | grep '*' || (
 # run task
 
 TASK_UUID=`${RALLY} \
-task start 2>&1 ${TASK_FILE} \
+task start  ${TASK_FILE} 2>&1\
 | tee -a ${TASK_LOG} \
 | grep 'rally task results '\
 | awk '{ print $4 }' \
