@@ -25,6 +25,7 @@ ${RALLY} deployment list | grep -v 'rally deployment create' | grep -v 'There ar
     if [ "x${OS_TENANT_NAME}" == "x"  ]
     then
       echo "OS_PROJECT_NAME or  OS_TENANT_NAME is not defined"
+      env
       exit 0
     fi
   fi
@@ -33,6 +34,7 @@ ${RALLY} deployment list | grep -v 'rally deployment create' | grep -v 'There ar
   then
 
     echo "OS_USERNAME is not defined"
+    env
     exit 0
 
   fi
@@ -41,6 +43,7 @@ ${RALLY} deployment list | grep -v 'rally deployment create' | grep -v 'There ar
   then
 
     echo "OS_PASSWORD is not defined"
+    env
     exit 0
 
   fi
@@ -49,6 +52,7 @@ ${RALLY} deployment list | grep -v 'rally deployment create' | grep -v 'There ar
   then
 
     echo  "OS_AUTH_URL is  not defined"
+    env
     exit 0
 
   fi
