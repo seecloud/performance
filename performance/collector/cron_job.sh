@@ -16,7 +16,7 @@ fi
 ${RALLY} deployment list
 
 # Create deployment if it does not exist
-${RALLY} deployment list | grep "${RALLY_DEPLOYMENT_NAME}" || (
+${RALLY} deployment list | grep -v 'rally deployment create' | grep -v 'There are no deployments. To create a new deployment, use:' | grep "${RALLY_DEPLOYMENT_NAME}" || (
   echo "Creating deployment:   rally deployment create --fromenv --name=${RALLY_DEPLOYMENT_NAME}"
   env
 
@@ -53,11 +53,13 @@ ${RALLY} deployment list | grep "${RALLY_DEPLOYMENT_NAME}" || (
 
   fi
 
-  ${RALLY} deployment create --fromenv --name=rally && ${RALLY} deployment  use ${RALLY_DEPLOYMENT_NAME}
+  ${RALLY} deployment create --fromenv --name=${RALLY_DEPLOYMENT_NAME} && ${RALLY} deployment  use ${RALLY_DEPLOYMENT_NAME}
+  ${RALLY} deployment list
 )
 
 # run task
 ${RALLY} deployment  use ${RALLY_DEPLOYMENT_NAME}
+${RALLY} deployment list
 
 TASK_UUID=`${RALLY} \
 task start  ${TASK_FILE} | tee /dev/stderr \
@@ -66,10 +68,16 @@ task start  ${TASK_FILE} | tee /dev/stderr \
 | sort \
 | uniq`;
 
-echo UUID=${TASK_UUID}
+if [ "x${UUID}" = "x" ]
+then
+  echo UUID=${TASK_UUID}
+  echo "looks like rally task run failed"
+  exit 1
+fi
 
 ${RALLY} --plugin-paths=/opt/perf/rally_plugins  \
 task export \
 --uuid ${TASK_UUID} \
 --connection ${RALLY_CONNECTION_STRING}
+
 
