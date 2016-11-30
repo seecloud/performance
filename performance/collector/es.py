@@ -16,10 +16,10 @@
 import json
 import os
 
+import datetime
 import requests
 import six
-
-import datetime
+import urlparse
 
 
 from rally import api
