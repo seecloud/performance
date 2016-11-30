@@ -15,7 +15,7 @@ then
   if [ "x${IGNORE_CONFIG}" == "x" ]
   then 
   # kill PID=1 which stop docker  
-	kill -9 1
+	kill 1
   fi
 else
 
