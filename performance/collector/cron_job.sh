@@ -2,9 +2,45 @@
 
 #set -x
 
+PYTHON='/usr/bin/python'
 RALLY='/usr/local/bin/rally'
 TASK_FILE='/opt/perf/cron_jobs/task.yaml'
 RALLY_DEPLOYMENT_NAME='rally'
+
+
+
+if ! test -f /etc/oss/performance/performance.yaml
+then
+# if config does not exist and IGNORE_CONFIG is unset
+  if [ "x${IGNORE_CONFIG}" == "x" ]
+  then 
+  # kill PID=1 which stop docker  
+	kill -9 1
+  fi
+else
+
+ENV_DATA=$(${PYTHON} - <<END
+import os; import yaml
+
+with open('/etc/oss/performance/performance.yaml') as fp: config = yaml.safe_load(fp);
+print("export RALLY_CONNECTION_STRING="+str(config['rally_connectioon_string']))
+for i in config['openstack_credentials']:
+    for j in i: print("export "+str(j).upper()+"='"+str(i[j])+"'");
+END
+)
+
+eval ${ENV_DATA}
+
+fi
+
+
+
+
+
+
+
+
+
 
 if [ "x${RALLY_CONNECTION_STRING}" == "x" ]
 then
