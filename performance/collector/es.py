@@ -58,7 +58,7 @@ class ESExporter(exporter.Exporter):
         self.url = parse_obj.path.split('/')[-1]
         self.proto = 'http://'
         self.validate()
-        
+
     def export(self, uuid):
         """Export results of the task to the file.
 
@@ -88,7 +88,9 @@ class ESExporter(exporter.Exporter):
                                 'region': self.region,
                                 'metric': k,
                                 'value': v,
-                                'timestamp': datetime.datetime.now().isoformat()
+                                'timestamp': (
+                                    datetime.datetime.now().isoformat()
+                                )
                             }
                             es_data_list.append({'index': {}})
                             es_data_list.append(es_data)
