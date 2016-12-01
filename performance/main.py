@@ -14,21 +14,61 @@
 #    under the License.
 
 import flask
-from flask_helpers import routing  # noqa
+import requests
+import os
+import six
+import json
+import logging
 
-from performance import api
-from performance import config
+config = None
 
-app = flask.Flask(__name__, static_folder=None)
-app.config.update(config.get_config()["flask"])
+es_index_name = 'performance'
+es_index_type = 'key_metrics'
+
+period_map = {
+    'day':   'now-1d',
+    'week':  'now-7d',
+    'month': 'now-1M'
+}
+
+interval_map = {
+    'day':  '15m',
+    'week': '100m',
+    'month': '3100m'
+}
 
 
-for module in [api]:
-    for url_prefix, blueprint in module.get_blueprints():
-        app.register_blueprint(blueprint, url_prefix="/api%s" % url_prefix)
+def pretty_js(x):
+    return json.dumps(x, sort_keys=True, indent=4)
 
 
-app = routing.add_routing_map(app, html_uri=None, json_uri="/")
+def get_config():
+    """Get cached configuration.
+
+    :returns: application config
+    :rtype: dict
+    """
+    global config
+    if not config:
+        path = os.environ.get("PERFORMANCE_CONF",
+                              "/etc/oss/performance/config.json")
+        try:
+            config = json.load(open(path))
+            logging.info("Config is '%s'" % path)
+        except IOError as e:
+            logging.warning("Config at '%s': %s" % (path, e))
+            config = {
+                "flask": {
+                    "HOST": "0.0.0.0",
+                    "PORT": 5010,
+                    "DEBUG": False
+                }
+            }
+    return config
+
+
+app = flask.Flask(__name__)
+app.config.update(get_config()["flask"])
 
 
 @app.errorhandler(404)
@@ -37,8 +77,183 @@ def not_found(error):
 
 
 def main():
+
+    global es_url
+    es_url = get_config()["elasticsearch"]
     app.run(host=app.config.get("HOST", "0.0.0.0"),
             port=app.config.get("PORT", 5010))
+
+
+@app.route("/api/v1/performance/<period>")
+def get_perf(period):
+    request_body = {
+        "size": 0,
+        "query": {
+            "bool": {
+                "must": [{
+                    "range": {
+                        "timestamp": {
+                            "gte": period_map[period],
+                            "lt":  "now",
+                            "format": "yyyy-MM-dd'T'H:m:s+00:00"
+                        }
+                    }
+                }]
+            }
+        },
+        "aggs": {
+            "region_agg": {
+                "terms": {
+                    "field": "region.raw",
+                    "size":   1000000,
+                },
+                "aggs": {
+                    "metric_agg": {
+                        "terms": {
+                            "field": "metric.raw",
+                            "size":   1000000,
+                        },
+                        "aggs": {
+                            "per_period": {
+                                "date_histogram": {
+                                    "field": "timestamp",
+                                    "interval": interval_map[period],
+                                    "format": "yyyy-MM-dd'T'H:m:s+00:00",
+                                },
+                                "aggs": {
+                                    "extended_stats_agg": {
+                                        "extended_stats": {
+                                            "field": "value"
+                                        }
+                                    },
+                                    "percentiles_agg": {
+                                        "percentiles": {
+                                            "field": "value"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    r = requests.post(es_url + "/_search?&pretty", json=request_body)
+
+    buckets = r.json()['aggregations']['region_agg']['buckets']
+
+    region_list = []
+
+    for bucket in buckets:
+        metric_list = []
+        for metric_bucket in bucket['metric_agg']['buckets']:
+            data_points = []
+            for per_period_bucket in metric_bucket['per_period']['buckets']:
+                p = per_period_bucket['percentiles_agg']['values']
+                data_point = {
+                    'timestamp': per_period_bucket['key_as_string'],
+                    'unixtimestamp': per_period_bucket['key'],
+                    'avg': per_period_bucket['extended_stats_agg']['avg'],
+                    'min': per_period_bucket['extended_stats_agg']['min'],
+                    'max': per_period_bucket['extended_stats_agg']['max'],
+                    'percentile_1_0': p['1.0'],
+                    'percentile_5_0': p['5.0'],
+                    'percentile_25_0': p['25.0'],
+                    'percentile_50_0': p['50.0'],
+                    'percentile_75_0': p['75.0'],
+                    'percentile_95_0': p['95.0'],
+                    'percentile_99_0': p['99.0']
+                }
+                data_points.append(data_point)
+            metric_list.append({metric_bucket['key']: data_points})
+        region_list.append({bucket['key']: metric_list})
+    print(region_list)
+    return flask.jsonify(region_list)
+
+
+@app.route("/api/v1/region/<region>/<period>")
+def get_perf_for_region(region,  period):
+    request_body = {
+        "size": 0,
+        "query": {
+            "bool": {
+                "must": [
+                    {
+                        "range": {
+                            "timestamp": {
+                                "gte": period_map[period],
+                                "lt":  "now",
+                                "format": "yyyy-MM-dd'T'H:m:s+00:00"
+                            }
+                        }
+                    },
+                    {
+                        "match": {"region": region}
+                    }
+                ]
+            }
+        },
+        "aggs": {
+            "metric_agg": {
+                "terms": {
+                    "field": "metric.raw",
+                    "size":   1000000,
+                },
+                "aggs": {
+                    "per_period": {
+                        "date_histogram": {
+                            "field": "timestamp",
+                            "interval": interval_map[period],
+                            "format": "yyyy-MM-dd'T'H:m:s+00:00",
+                        },
+                        "aggs": {
+                            "extended_stats_agg": {
+                                "extended_stats": {
+                                    "field": "value"
+                                }
+                            },
+                            "percentiles_agg": {
+                                "percentiles": {
+                                    "field": "value"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    r = requests.post(es_url + "/_search?&pretty", json=request_body)
+#    agg = r.json()['aggregations']['metric_agg']['buckets'][0]
+    buckets = r.json()['aggregations']['metric_agg']['buckets']
+
+    metric_list = []
+
+    for bucket in buckets:
+        data_points = []
+        for per_period_bucket in bucket['per_period']['buckets']:
+            p = per_period_bucket['percentiles_agg']['values']
+            data_point = {
+                'timestamp': per_period_bucket['key_as_string'],
+                'unixtimestamp': per_period_bucket['key'],
+                'avg': per_period_bucket['extended_stats_agg']['avg'],
+                'min': per_period_bucket['extended_stats_agg']['min'],
+                'max': per_period_bucket['extended_stats_agg']['max'],
+                'percentile_1_0': p['1.0'],
+                'percentile_5_0': p['5.0'],
+                'percentile_25_0': p['25.0'],
+                'percentile_50_0': p['50.0'],
+                'percentile_75_0': p['75.0'],
+                'percentile_95_0': p['95.0'],
+                'percentile_99_0': p['99.0']
+            }
+            data_points.append(data_point)
+        metric_list.append({bucket['key']: data_points})
+    print(metric_list)
+    return flask.jsonify(metric_list)
 
 
 if __name__ == "__main__":

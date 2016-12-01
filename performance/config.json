@@ -1,0 +1,8 @@
+{
+    "flask": {
+        "HOST": "0.0.0.0",
+        "PORT": 5010,
+        "DEBUG": "True"
+    },
+    "elasticsearch": "http://172.18.196.234:9200"
+}
