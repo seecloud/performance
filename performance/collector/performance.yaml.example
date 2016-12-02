@@ -1,0 +1,7 @@
+---
+rally_connectioon_string: 'es:///172.18.196.234:9200?region=My.Region.net88'
+openstack_credentials:.
+ - os_password: 'admin'
+ - os_username: 'admin'
+ - os_project_name: 'admin'
+ - os_auth_url: 'http://172.16.56.3:5000/'
